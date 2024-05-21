@@ -1,4 +1,7 @@
-use std::net::TcpListener;
+use std::{
+    io::{prelude::*, BufReader},
+    net::{TcpListener, TcpStream},
+};
 
 const IP: &str = "127.0.0.1";
 const PORT: &str = "8080";
@@ -13,6 +16,17 @@ fn main() {
         // TODO: (faqsarg - 20/05/2024) avoid unwrap?
         let stream = stream.unwrap();
 
-        println!("connection established");
+        handle_conn(stream);
     }
+}
+
+fn handle_conn(mut stream: TcpStream) {
+    let buf_reader = BufReader::new(&mut stream);
+    let http_req: Vec<_> = buf_reader
+        .lines()
+        .map(|res| res.unwrap())
+        .take_while(|line| !line.is_empty())
+        .collect();
+
+    println!("req: {:#?}", http_req);
 }
