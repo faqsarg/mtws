@@ -23,20 +23,18 @@ fn main() {
 
 fn handle_conn(mut stream: TcpStream) {
     let buf_reader = BufReader::new(&mut stream);
+    let req_line = buf_reader.lines().next().unwrap().unwrap();
 
-    // TODO: (faqsarg - 20/05/2024) handle the Result<> from .lines() properly instead of unwrapping
-    let http_req: Vec<_> = buf_reader
-        .lines()
-        .map(|res| res.unwrap())
-        .take_while(|line| !line.is_empty())
-        .collect();
+    let (status_line, filename) = if req_line == "GET / HTTP/1.1" {
+        ("HTTP/1.1 200 OK", "ok.html")
+    } else {
+        ("HTTP/1.1 400 NOT FOUND", "404.html")
+    };
 
-    let status = "HTTP/1.1 200 OK"; // lol best web server ever!!!
-    let content = fs::read_to_string("ok.html").unwrap(); // TODO: (faqsarg - 20/05/2024) handle error
-                                                          // properly
+    let content = fs::read_to_string(filename).unwrap();
     let length = content.len();
 
-    let response = format!("{status}\r\nContent-Length: {length}\r\n\r\n{content}");
+    let response = format!("{status_line}\r\nContent-Length: {length}\r\n\r\n{content}");
 
     // TODO: (faqsarg - 20/05/2024) proper error handling
     stream.write_all(response.as_bytes()).unwrap();
