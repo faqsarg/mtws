@@ -3,6 +3,7 @@ use std::{
     io::{prelude::*, BufReader},
     net::{TcpListener, TcpStream},
 };
+use mtws::ThreadPool;
 
 const IP: &str = "127.0.0.1";
 const PORT: &str = "8080";
@@ -12,12 +13,15 @@ fn main() {
 
     // TODO: (faqsarg - 20/05/2024) handle error properly
     let lsnr = TcpListener::bind(addr).unwrap();
+    let pool = ThreadPool::new(4);
 
     for stream in lsnr.incoming() {
         // TODO: (faqsarg - 20/05/2024) avoid unwrap?
         let stream = stream.unwrap();
 
-        handle_conn(stream);
+        pool.execute(|| {
+            handle_conn(stream);
+        })
     }
 }
 
